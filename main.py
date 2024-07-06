@@ -40,12 +40,12 @@ while cap.isOpened():
                 pyautogui.doubleClick(x=thumb_coords[0], y=middle_coords[1])
                 pyautogui.sleep(1)
 
-            # Single click if thumb and index finger are close
+            # Left click if thumb and index finger are close
             if abs(index_coords[1] - thumb_coords[1]) < 50:
                 (pyautogui.click(x=thumb_coords[0], y=index_coords[1]))
                 pyautogui.sleep(1)
 
-
+            # Right click if index and middle finger are close 
             if abs(middle_coords[1] - index_coords[1]) < 50:
                 pyautogui.rightClick(x=index_coords[0], y=middle_coords[1])
                 pyautogui.sleep(1)
