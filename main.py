@@ -2,62 +2,57 @@ import cv2
 import mediapipe as mp
 import pyautogui
 
+# Initialize video capture and mediapipe hand detector
 cap = cv2.VideoCapture(0)
 hand_detector = mp.solutions.hands.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.5)
 drawing_utils = mp.solutions.drawing_utils
 screen_width, screen_height = pyautogui.size()
 
-index_x = 0
-index_y = 0
-middle_x = 0
-middle_y = 0
-thumb_x = 0
-thumb_y = 0
+def convert_coordinates(x, y, frame_width, frame_height):
+    screen_x = screen_width / frame_width * x
+    screen_y = screen_height / frame_height * y
+    return screen_x, screen_y
 
 while cap.isOpened():
     success, frame = cap.read()
-    frame = cv2.flip(frame, 1)
+    if not success:
+        break
+
+    frame = cv2.flip(frame, 1)  # Flip the frame horizontally
     frame_height, frame_width, _ = frame.shape
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     output = hand_detector.process(rgb_frame)
     hands = output.multi_hand_landmarks
 
     if hands:
-
         for hand in hands:
             drawing_utils.draw_landmarks(frame, hand)
             landmarks = hand.landmark
 
-            for id, landmark in enumerate(landmarks):
-                x = (landmark.x*frame_width)
-                y = (landmark.y*frame_height)
+            index_coords = convert_coordinates(landmarks[8].x * frame_width, landmarks[8].y * frame_height, frame_width, frame_height)
+            pyautogui.moveTo(*index_coords)
 
-                if id == 8:
-                    index_x = screen_width / frame_width * x
-                    index_y = screen_width / frame_width * y
-                    pyautogui.moveTo(index_x, index_y)
+            middle_coords = convert_coordinates(landmarks[12].x * frame_width, landmarks[12].y * frame_height, frame_width, frame_height)
+            thumb_coords = convert_coordinates(landmarks[4].x * frame_width, landmarks[4].y * frame_height, frame_width, frame_height)
 
-                if id == 12:
-                    middle_x = screen_width / frame_width * x
-                    middle_y = screen_width / frame_width * y
+            # Double click if thumb and middle finger are close
+            if abs(middle_coords[1] - thumb_coords[1]) < 50:
+                pyautogui.doubleClick(x=thumb_coords[0], y=middle_coords[1])
+                pyautogui.sleep(1)
 
-                if id == 4:
-                    thumb_x = screen_width / frame_width * x
-                    thumb_y = screen_width / frame_width * y
-                    if (abs(middle_y - thumb_y)) < 50:
-                        pyautogui.click()
-                        pyautogui.sleep(1)
+            # Single click if thumb and index finger are close
+            if abs(index_coords[1] - thumb_coords[1]) < 50:
+                (pyautogui.click(x=thumb_coords[0], y=index_coords[1]))
+                pyautogui.sleep(1)
 
-                if id == 16:
-                    ring_x = screen_width / frame_width * x
-                    ring_y = screen_width / frame_width * y
 
-                if id == 20:
-                    pinky_x = screen_width / frame_width * x
-                    pinky_y = screen_width / frame_width * y
+            if abs(middle_coords[1] - index_coords[1]) < 50:
+                pyautogui.rightClick(x=index_coords[0], y=middle_coords[1])
+                pyautogui.sleep(1)
 
-                if id == 0:
-                    wrist_x = screen_width / frame_width * x
-                    wrist_y = screen_width / frame_width * y
-                    
-    cv2.waitKey(1)
+    cv2.imshow('Hand Tracking', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
