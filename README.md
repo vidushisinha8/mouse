@@ -1,5 +1,7 @@
 hand gestures = mouse? 
 
 Navigate using you Index Finger,
-Click using Index Finger and Thumb like 🤏🏻,
+Left Click using Index Finger and Thumb like such 🤏🏻,
+Right Click using Index Finger and Middle Finger like 🤞🏻,
 Double Click using Middle Finger and Thumb likewise!
+
